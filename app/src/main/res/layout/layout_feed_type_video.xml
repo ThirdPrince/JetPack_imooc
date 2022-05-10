@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <data>
+
+        <variable
+            name="feed"
+            type="com.jetpack_imooc.model.Feed"/>
+    </data>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical">
+
+        <include
+            layout="@layout/layout_feed_author"
+            app:user="@{feed.author}"></include>
+
+        <include
+            layout="@layout/layout_feed_text"
+            app:feedText = "@{feed.feeds_text}"></include>
+
+        <!--video-->
+        <com.jetpack_imooc.view.ListPlayView
+            android:id="@+id/list_player_view"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="@dimen/dimen_10"
+            >
+
+        </com.jetpack_imooc.view.ListPlayView>
+
+        <include
+            layout="@layout/layout_feed_tag"
+            app:tagText = "@{feed.activityText}"></include>
+
+        <include
+            layout="@layout/layout_feed_top_comment"
+            app:comment = "@{feed.topComment}"></include>
+
+        <include
+            layout="@layout/layout_feed_interaction"
+            app:feed = "@{feed}"></include>
+
+    </LinearLayout>
+</layout>

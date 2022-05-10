@@ -1,0 +1,6 @@
+include ':libcommon'
+include ':libnetwork'
+include ':libnavannotation'
+include ':libnavcompiler'
+include ':app'
+rootProject.name = "JetPack_imooc"
