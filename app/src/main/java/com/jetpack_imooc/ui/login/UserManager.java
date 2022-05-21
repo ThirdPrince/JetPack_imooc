@@ -63,6 +63,7 @@ public class UserManager {
 
     public LiveData<User> login(Context context) {
         Intent intent = new Intent(context, LoginActivity.class);
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         context.startActivity(intent);
         return userMutableLiveData;
 
@@ -77,6 +78,6 @@ public class UserManager {
     }
 
     public long getUserId() {
-        return isLogin() ? mUser.getUserId() : 0;
+        return isLogin() ? mUser.userId : 0;
     }
 }

@@ -54,10 +54,34 @@ public class HomeFragment extends AbsListFragment<Feed,HomeViewModel> {
 
         feedType =  getArguments()== null ? "pics":getArguments().getString("feedType");
 
-        return new FeedAdapter(getContext(),feedType){
+        return new FeedAdapter(getContext(),feedType) {
             @Override
-            public void onViewAttachedToWindow(@NonNull ViewHolder holder) {
-                super.onViewAttachedToWindow(holder);
+            public void onViewAttachedToWindow2(@NonNull ViewHolder holder) {
+                if (holder.isVideoItem()) {
+                   // playDetector.addTarget(holder.getListPlayerView());
+                }
+            }
+
+            @Override
+            public void onViewDetachedFromWindow2(@NonNull ViewHolder holder) {
+               // playDetector.removeTarget(holder.getListPlayerView());
+            }
+
+            @Override
+            public void onStartFeedDetailActivity(Feed feed) {
+                boolean isVideo = feed.itemType == Feed.TYPE_VIDEO;
+               // shouldPause = !isVideo;
+            }
+
+            @Override
+            public void onCurrentListChanged(@Nullable PagedList<Feed> previousList, @Nullable PagedList<Feed> currentList) {
+                //这个方法是在我们每提交一次 pagelist对象到adapter 就会触发一次
+                //每调用一次 adpater.submitlist
+                if (previousList != null && currentList != null) {
+                    if (!currentList.containsAll(previousList)) {
+                     //   mRecyclerView.scrollToPosition(0);
+                    }
+                }
             }
         };
     }

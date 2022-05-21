@@ -90,7 +90,7 @@ public class HomeViewModel extends AbsViewModel<Feed> {
         @NonNull
         @Override
         public Integer getKey(@NonNull Feed item) {
-            return item.getId();
+            return item.id;
         }
     }
 

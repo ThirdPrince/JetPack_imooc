@@ -6,9 +6,8 @@
 
         <variable
             name="user"
-            type="User" />
+            type="com.jetpack_imooc.model.User" />
 
-        <import type="com.jetpack_imooc.model.User"></import>
     </data>
 
     <LinearLayout
@@ -32,6 +31,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginLeft="10dp"
+            android:layout_gravity="center"
             android:gravity="center"
             android:text="@{user.name}"
             android:textColor="@color/color_333"

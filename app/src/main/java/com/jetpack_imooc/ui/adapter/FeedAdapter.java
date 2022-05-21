@@ -5,16 +5,24 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import androidx.annotation.NonNull;
+import androidx.databinding.DataBindingUtil;
 import androidx.databinding.ViewDataBinding;
+import androidx.lifecycle.LifecycleOwner;
+import androidx.lifecycle.Observer;
 import androidx.paging.PagedListAdapter;
 import androidx.recyclerview.widget.DiffUtil;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.jetpack.libcommon.extention.AbsPagedListAdapter;
+import com.jetpack.libcommon.extention.LiveDataBus;
 import com.jetpack.libcommon.utils.EasyLog;
+import com.jetpack_imooc.BR;
+import com.jetpack_imooc.R;
 import com.jetpack_imooc.databinding.LayoutFeedTypeImageBinding;
 import com.jetpack_imooc.databinding.LayoutFeedTypeVideoBinding;
 import com.jetpack_imooc.model.Feed;
-import com.jetpack_imooc.model.FeedKt;
+import com.jetpack_imooc.ui.home.InteractionPresenter;
+
 
 /**
  * @author dhl
@@ -24,7 +32,7 @@ import com.jetpack_imooc.model.FeedKt;
  * @Description: FeedAdapter
  * @date 2022 0426
  */
-public class FeedAdapter extends PagedListAdapter<Feed,FeedAdapter.ViewHolder> {
+public class FeedAdapter extends AbsPagedListAdapter<Feed,FeedAdapter.ViewHolder> {
 
     private static final String TAG = "FeedAdapter";
 
@@ -35,7 +43,7 @@ public class FeedAdapter extends PagedListAdapter<Feed,FeedAdapter.ViewHolder> {
         super(new DiffUtil.ItemCallback<Feed>() {
             @Override
             public boolean areItemsTheSame(@NonNull Feed oldItem, @NonNull Feed newItem) {
-                return oldItem.getId() == newItem.getId();
+                return oldItem.id == newItem.id;
             }
 
             @Override
@@ -48,30 +56,78 @@ public class FeedAdapter extends PagedListAdapter<Feed,FeedAdapter.ViewHolder> {
         mCategory =  category;
     }
 
-    @NonNull
-    @Override
-    public FeedAdapter.ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        EasyLog.d(TAG,"onCreateViewHolder");
-        ViewDataBinding binding;
-        if(viewType == FeedKt.TYPE_IMAGE_TEXT){
-             binding = LayoutFeedTypeImageBinding.inflate(inflate);
-        }else{
-            binding = LayoutFeedTypeVideoBinding.inflate(inflate);
-        }
-        return new ViewHolder(binding.getRoot(),binding);
-    }
 
     @Override
-    public void onBindViewHolder(@NonNull FeedAdapter.ViewHolder holder, int position) {
-
-        holder.bindData(getItem(position));
-    }
-
-    @Override
-    public int getItemViewType(int position) {
+    protected int getItemViewType2(int position) {
         Feed feed = getItem(position);
-        return feed.getItemType();
+        switch (feed.itemType){
+            case Feed.TYPE_IMAGE_TEXT:
+                return R.layout.layout_feed_type_image;
+            case Feed.TYPE_VIDEO:
+                return R.layout.layout_feed_type_video;
+        }
+        return 0;
     }
+
+    @Override
+    protected ViewHolder onCreateViewHolder2(ViewGroup parent, int viewType) {
+        ViewDataBinding binding = DataBindingUtil.inflate(inflate, viewType, parent, false);
+        return new ViewHolder(binding.getRoot(), binding);
+    }
+
+
+
+    @Override
+    protected void onBindViewHolder2(ViewHolder holder, int position) {
+        final Feed feed = getItem(position);
+
+        holder.bindData(feed);
+        holder.itemView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+               // FeedDetailActivity.startFeedDetailActivity(mContext, feed, mCategory);
+                onStartFeedDetailActivity(feed);
+                if (mFeedObserver == null) {
+                    EasyLog.e(TAG,"mFeedObserver");
+                    mFeedObserver = new FeedObserver();
+                    LiveDataBus.get()
+                            .with(InteractionPresenter.DATA_FROM_INTERACTION)
+                            .observe((LifecycleOwner) mContext, mFeedObserver);
+                }
+                mFeedObserver.setFeed(feed);
+            }
+        });
+
+
+
+    }
+
+    public void onStartFeedDetailActivity(Feed feed) {
+
+    }
+
+    private FeedObserver mFeedObserver;
+
+    private class FeedObserver implements Observer<Feed> {
+
+        private Feed mFeed;
+
+        @Override
+        public void onChanged(Feed newOne) {
+            if (mFeed.id != newOne.id)
+                return;
+            mFeed.author = newOne.author;
+            mFeed.ugc = newOne.ugc;
+            mFeed.notifyChange();
+        }
+
+        public void setFeed(Feed feed) {
+
+            mFeed = feed;
+        }
+    }
+
+
 
     public class ViewHolder extends RecyclerView.ViewHolder{
         private ViewDataBinding mBinding;
@@ -82,15 +138,21 @@ public class FeedAdapter extends PagedListAdapter<Feed,FeedAdapter.ViewHolder> {
         }
 
         public void bindData(Feed item) {
+            mBinding.setVariable(BR.feed, item);
+            mBinding.setVariable(BR.lifeCycleOwner, mContext);
             if(mBinding instanceof LayoutFeedTypeImageBinding){
                 LayoutFeedTypeImageBinding imageBinding = (LayoutFeedTypeImageBinding)mBinding;
-                imageBinding.setFeed(item);
-                imageBinding.feedImage.bindData(item.getWidth(),item.getHeight(),16,item.getCover());
+                //imageBinding.setFeed(item);
+                imageBinding.feedImage.bindData(item.width,item.height,16,item.cover);
             }else{
                 LayoutFeedTypeVideoBinding videoBinding = (LayoutFeedTypeVideoBinding)mBinding;
                 videoBinding.setFeed(item);
-                videoBinding.listPlayerView.bindData(mCategory,item.getWidth(),item.getHeight(),item.getCover(),item.getUrl());
+                videoBinding.listPlayerView.bindData(mCategory,item.width,item.height,item.cover,item.url);
             }
+        }
+
+        public boolean isVideoItem() {
+            return mBinding instanceof LayoutFeedTypeVideoBinding;
         }
     }
 

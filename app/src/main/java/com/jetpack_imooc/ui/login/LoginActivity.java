@@ -141,6 +141,12 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
                     public void onSuccess(ApiResponse<User> response) {
                         if(response.body != null){
                             UserManager.get().save(response.body);
+                            runOnUiThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    finish();
+                                }
+                            });
                         }else{
                             ToastUtils.INSTANCE.show("登录失败");
                         }

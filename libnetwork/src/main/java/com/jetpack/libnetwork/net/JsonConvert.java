@@ -1,11 +1,12 @@
 package com.jetpack.libnetwork.net;
 
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONObject;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 
 import org.json.JSONArray;
-import org.json.JSONObject;
 
 import java.lang.reflect.Type;
 
@@ -14,42 +15,28 @@ import java.lang.reflect.Type;
  * @version V1.0
  * @Title: JsonConvert
  * @Package $
- * @Description: JsonConvert
+ * @Description: JsonConvert  使用阿里的JSON 可以序列化
  * @date 2022 0425
  */
 public class JsonConvert implements Convert {
 
-    private Gson gson = new Gson();
 
+    //默认的Json转 Java Bean的转换器
     @Override
     public Object convert(String response, Type type) {
-        //JSONObject jsonObject = JSON.parseObject(response);
-        //JSONObject data = jsonObject.getJSONObject("data");
-        try {
-            JSONObject jsonObject = new JSONObject(response).getJSONObject("data");
-            JSONArray data = jsonObject.getJSONArray("data");
-            if(data != null){
-                //JSONObject data1 = data.getJSONObject(0);
-                Object o = gson.fromJson(data.toString(),type);
-                return o;
-                // JSON.parseObject(data1.toString(),type);
-            }
-        }catch (Exception e){
-            e.printStackTrace();
+        com.alibaba.fastjson.JSONObject jsonObject = JSON.parseObject(response);
+        JSONObject data = jsonObject.getJSONObject("data");
+        if (data != null) {
+            Object data1 = data.get("data");
+            return JSON.parseObject(data1.toString(), type);
         }
-
-
         return null;
     }
 
     @Override
     public Object convert(String response, Class claz) {
-//        JSONObject jsonObject = JSON.parseObject(response);
-//        JSONObject data = jsonObject.getJSONObject("data");
-//        if(data != null){
-//            Object data1 = data.get("data");
-//            return JSON.parseObject(data1.toString(),claz);
-//        }
         return null;
     }
+
+
 }

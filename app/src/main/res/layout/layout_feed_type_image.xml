@@ -6,41 +6,53 @@
 
         <variable
             name="feed"
-            type="com.jetpack_imooc.model.Feed"/>
+            type="Feed" />
+
+        <variable
+            name="lifeCycleOwner"
+            type="androidx.lifecycle.LifecycleOwner" />
+
+        <import type="com.jetpack_imooc.model.Feed"></import>
+
     </data>
 
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:orientation="vertical">
+        android:layout_height="wrap_content"
+        android:background="@color/color_white"
+        android:orientation="vertical"
+        android:paddingTop="@dimen/dp_10">
+
 
         <include
             layout="@layout/layout_feed_author"
             app:user="@{feed.author}"></include>
 
-        <include
-            layout="@layout/layout_feed_text"
-            app:feedText = "@{feed.feeds_text}"></include>
+<!--        <include-->
+<!--            layout="@layout/layout_feed_text"-->
+<!--            app:lines="@{3}"-->
+<!--            app:feedText="@{feed.feeds_text}"></include>-->
 
-        <!--图片 视频-->
+
+        <!--   图片区域-->
         <com.jetpack_imooc.view.PPImageView
             android:id="@+id/feed_image"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content">
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="@dimen/dp_10"></com.jetpack_imooc.view.PPImageView>
 
-        </com.jetpack_imooc.view.PPImageView>
-
-        <include
-            layout="@layout/layout_feed_tag"
-            app:tagText = "@{feed.activityText}"></include>
+<!--        <include-->
+<!--            layout="@layout/layout_feed_tag"-->
+<!--            app:tagText="@{feed.activityText}"></include>-->
 
         <include
             layout="@layout/layout_feed_top_comment"
-            app:comment = "@{feed.topComment}"></include>
+            app:comment="@{feed.topComment}"></include>
 
         <include
+            android:id="@+id/interaction_binding"
             layout="@layout/layout_feed_interaction"
-            app:feed = "@{feed}"></include>
-
+            app:lifeCycleOwner="@{lifeCycleOwner}"
+            app:feed="@{feed}"></include>
     </LinearLayout>
 </layout>
