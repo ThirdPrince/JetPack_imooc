@@ -55,8 +55,8 @@ public class ViewHelper {
                     }else if(radiusSide == RADIUS_BOTTOM){
                         top -= radius;
                     }
-
                     outline.setRoundRect(left,top,right,bottom,radius);
+                    return;
                 }
 
                 int left = 0,top = 0,right = w,bottom = h;
