@@ -17,6 +17,8 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.jetpack.libcommon.utils.EasyLog;
 import com.jetpack_imooc.R;
+import com.jetpack_imooc.exoplayer.PageListPlayDetector;
+import com.jetpack_imooc.exoplayer.PageListPlayManager;
 import com.jetpack_imooc.libnavannotation.FragmentDestination;
 import com.jetpack_imooc.model.Feed;
 import com.jetpack_imooc.ui.AbsListFragment;
@@ -34,11 +36,14 @@ public class HomeFragment extends AbsListFragment<Feed,HomeViewModel> {
 
     private static final String TAG = "HomeFragment";
 
+    private PageListPlayDetector playDetector;
+
     private String feedType;
 
 
     @Override
     protected void afterView() {
+        playDetector = new PageListPlayDetector(this,recyclerView);
         mViewModel.setFeedType(feedType);
         mViewModel.getCacheLiveData().observe(this, new Observer<PagedList<Feed>>() {
             @Override
@@ -52,19 +57,20 @@ public class HomeFragment extends AbsListFragment<Feed,HomeViewModel> {
     @Override
     public PagedListAdapter getAdapter() {
 
-        feedType =  getArguments()== null ? "pics":getArguments().getString("feedType");
+        feedType =  getArguments()== null ? "video":getArguments().getString("feedType");
 
         return new FeedAdapter(getContext(),feedType) {
             @Override
             public void onViewAttachedToWindow2(@NonNull ViewHolder holder) {
                 if (holder.isVideoItem()) {
-                   // playDetector.addTarget(holder.getListPlayerView());
+                    playDetector.addTarget(holder.getListPlayerView());
+
                 }
             }
 
             @Override
             public void onViewDetachedFromWindow2(@NonNull ViewHolder holder) {
-               // playDetector.removeTarget(holder.getListPlayerView());
+                playDetector.removeTarget(holder.getListPlayerView());
             }
 
             @Override
@@ -96,5 +102,27 @@ public class HomeFragment extends AbsListFragment<Feed,HomeViewModel> {
 
         mViewModel.getDataSource().invalidate();
 
+    }
+
+    @Override
+    public void onHiddenChanged(boolean hidden) {
+        super.onHiddenChanged(hidden);
+        if(hidden){
+            playDetector.onPause();
+        }else {
+            playDetector.onResume();
+        }
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        playDetector.onResume();
+    }
+
+    @Override
+    public void onDestroy() {
+        PageListPlayManager.release(feedType);
+        super.onDestroy();
     }
 }

@@ -20,8 +20,10 @@ import com.jetpack_imooc.BR;
 import com.jetpack_imooc.R;
 import com.jetpack_imooc.databinding.LayoutFeedTypeImageBinding;
 import com.jetpack_imooc.databinding.LayoutFeedTypeVideoBinding;
+import com.jetpack_imooc.exoplayer.IPlayTarget;
 import com.jetpack_imooc.model.Feed;
 import com.jetpack_imooc.ui.home.InteractionPresenter;
+import com.jetpack_imooc.view.ListPlayView;
 
 
 /**
@@ -131,6 +133,7 @@ public class FeedAdapter extends AbsPagedListAdapter<Feed,FeedAdapter.ViewHolder
 
     public class ViewHolder extends RecyclerView.ViewHolder{
         private ViewDataBinding mBinding;
+        public ListPlayView listPlayView;
 
         public ViewHolder(View itemView,ViewDataBinding binding){
             super(itemView);
@@ -147,12 +150,17 @@ public class FeedAdapter extends AbsPagedListAdapter<Feed,FeedAdapter.ViewHolder
             }else{
                 LayoutFeedTypeVideoBinding videoBinding = (LayoutFeedTypeVideoBinding)mBinding;
                 videoBinding.setFeed(item);
+                listPlayView = videoBinding.listPlayerView;
                 videoBinding.listPlayerView.bindData(mCategory,item.width,item.height,item.cover,item.url);
             }
         }
 
         public boolean isVideoItem() {
             return mBinding instanceof LayoutFeedTypeVideoBinding;
+        }
+
+        public IPlayTarget getListPlayerView() {
+            return listPlayView;
         }
     }
 

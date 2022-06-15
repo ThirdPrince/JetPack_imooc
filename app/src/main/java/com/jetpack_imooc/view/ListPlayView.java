@@ -2,18 +2,29 @@ package com.jetpack_imooc.view;
 
 import android.content.Context;
 import android.media.Image;
+import android.text.TextUtils;
 import android.util.AttributeSet;
 import android.view.Gravity;
 import android.view.LayoutInflater;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.ViewParent;
 import android.widget.FrameLayout;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import com.google.android.exoplayer2.Player;
+import com.google.android.exoplayer2.SimpleExoPlayer;
+import com.google.android.exoplayer2.source.MediaSource;
+import com.google.android.exoplayer2.ui.PlayerControlView;
+import com.google.android.exoplayer2.ui.PlayerView;
 import com.jetpack.libcommon.utils.PixUtils;
 import com.jetpack_imooc.R;
+import com.jetpack_imooc.exoplayer.IPlayTarget;
+import com.jetpack_imooc.exoplayer.PageListPlay;
+import com.jetpack_imooc.exoplayer.PageListPlayManager;
 
 /**
  * @author dhl
@@ -23,7 +34,7 @@ import com.jetpack_imooc.R;
  * @Description: ListPlayView
  * @date 2022 0426
  */
-public class ListPlayView extends FrameLayout {
+public class ListPlayView extends FrameLayout implements IPlayTarget, PlayerControlView.VisibilityListener,Player.EventListener{
 
     private View bufferView;
 
@@ -32,6 +43,8 @@ public class ListPlayView extends FrameLayout {
     private String mVideoUrl;
 
     private String mCategory;
+
+    private boolean isPlaying;
 
     public ListPlayView(@NonNull Context context) {
         this(context, null);
@@ -48,6 +61,16 @@ public class ListPlayView extends FrameLayout {
         cover = findViewById(R.id.cover);
         blur = findViewById(R.id.blur_background);
         playBtn = findViewById(R.id.play_btn);
+        playBtn.setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if(isPlaying()){
+                    inActive();
+                }else {
+                    onActive();
+                }
+            }
+        });
 
     }
 
@@ -110,4 +133,105 @@ public class ListPlayView extends FrameLayout {
     }
 
 
-}
+    @Override
+    public ViewGroup getOwner() {
+        return this;
+    }
+
+    @Override
+    public boolean onTouchEvent(MotionEvent event) {
+         PageListPlay pageListPlay = PageListPlayManager.get(mCategory);
+         pageListPlay.controlView.show();
+         return true;
+    }
+
+    @Override
+    public void onActive() {
+        PageListPlay pageListPlay = PageListPlayManager.get(mCategory);
+        PlayerView playerView = pageListPlay.playerView;
+        PlayerControlView playerControlView = pageListPlay.controlView;
+        SimpleExoPlayer simpleExoPlayer = pageListPlay.exoPlayer;
+
+        ViewParent parent = playerView.getParent();
+        if(parent != this){
+            if(parent != null){
+                ((ViewGroup)parent).removeView(playerView);
+            }
+            ViewGroup.LayoutParams layoutParams = cover.getLayoutParams();
+            this.addView(playerView,1,layoutParams);
+        }
+        ViewParent ctrlParent = playerControlView.getParent();
+        if(ctrlParent != this){
+            if(ctrlParent != null){
+                ((ViewGroup)ctrlParent).removeView(playerControlView);
+            }
+            FrameLayout.LayoutParams params = new LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+            params.gravity = Gravity.BOTTOM;
+            this.addView(playerControlView,params);
+            playerControlView.setVisibilityListener(this);
+        }
+        playerControlView.show();
+
+        if(TextUtils.equals(pageListPlay.playerUrl,mVideoUrl)){
+
+        }else {
+            MediaSource mediaSource = PageListPlayManager.createMediaSource(mVideoUrl);
+            simpleExoPlayer.prepare(mediaSource);
+            simpleExoPlayer.setRepeatMode(Player.REPEAT_MODE_ONE);
+            simpleExoPlayer.addListener(this);
+        }
+
+
+    }
+
+    @Override
+    protected void onAttachedToWindow() {
+        super.onAttachedToWindow();
+        isPlaying = false;
+        bufferView.setVisibility(GONE);
+        cover.setVisibility(VISIBLE);
+        playBtn.setVisibility(VISIBLE);
+        playBtn.setImageResource(R.drawable.icon_video_play);
+    }
+
+    @Override
+    public void inActive() {
+        PageListPlay pageListPlay = PageListPlayManager.get(mCategory);
+        pageListPlay.exoPlayer.setPlayWhenReady(false);
+        playBtn.setVisibility(VISIBLE);
+        playBtn.setImageResource(R.drawable.icon_video_play);
+    }
+
+    @Override
+    public boolean isPlaying() {
+        return isPlaying;
+    }
+
+    @Override
+    public void onVisibilityChange(int visibility) {
+
+        playBtn.setVisibility(visibility);
+        playBtn.setImageResource(isPlaying ?R.drawable.icon_video_pause:R.drawable.icon_video_play);
+    }
+
+    @Override
+    public void onPlayerStateChanged(boolean playWhenReady, int playbackState) {
+
+        PageListPlay pageListPlay = PageListPlayManager.get(mCategory);
+        SimpleExoPlayer exoPlayer = pageListPlay.exoPlayer;
+
+
+        if(playbackState == Player.STATE_READY && exoPlayer.getBufferedPosition()!=0){
+            cover.setVisibility(View.INVISIBLE);
+            bufferView.setVisibility(INVISIBLE);
+        }else if(playbackState == Player.STATE_BUFFERING) {
+             bufferView.setVisibility(VISIBLE);
+        }
+        isPlaying = playbackState ==  Player.STATE_READY && exoPlayer.getBufferedPosition()!=0 && playWhenReady;
+
+        playBtn.setImageResource(isPlaying?R.drawable.icon_video_pause:R.drawable.icon_video_play);
+        exoPlayer.setPlayWhenReady(true);
+        }
+
+    }
+
